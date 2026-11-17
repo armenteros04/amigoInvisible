@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Listas de Navidad · Amigo invisible</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--pino:#12372a;--grosella:#a3243b;--papel:#fbf9f6;--oro:#c9a24b;--tinta:#1d2420;--gris:#6b746f;--linea:#dfe3df}
+*{box-sizing:border-box}
+body{margin:0;font:400 17px/1.55 "DM Sans",system-ui,sans-serif;color:var(--tinta);background:var(--pino);
+  background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,.07) 1.5px,transparent 0);background-size:26px 26px;min-height:100vh}
+h1,h2,h3{font-family:"Bricolage Grotesque",Georgia,serif;margin:0}
+.wrap{max-width:1040px;margin:0 auto;padding:40px 18px 64px}
+header{color:#fff;display:flex;flex-wrap:wrap;gap:18px;align-items:end;justify-content:space-between;margin-bottom:28px}
+header h1{font-size:clamp(2.2rem,7vw,3.6rem);line-height:1;font-weight:800;letter-spacing:-.02em}
+header p{margin:12px 0 0;max-width:44ch;color:#d7e4dc}
+.btn{border:0;border-radius:10px;padding:13px 20px;font:800 1.05rem "Bricolage Grotesque",serif;cursor:pointer;background:var(--grosella);color:#fff}
+.btn:hover{background:#8b1d32}
+.btn.sec{background:transparent;border:1.5px solid var(--pino);color:var(--pino);font:700 1rem "DM Sans"}
+.btn.sec:hover{background:var(--pino);color:#fff}
+.btn:disabled{opacity:.6;cursor:wait}
+button:focus-visible,input:focus,textarea:focus,select:focus,a:focus-visible{outline:3px solid var(--oro);outline-offset:1px}
+
+/* Listas */
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.card{background:var(--papel);border-radius:6px 6px 14px 14px;padding:22px 20px 20px;border-top:6px solid var(--grosella);box-shadow:0 14px 30px rgba(0,0,0,.25)}
+.card:nth-child(even){border-top-color:var(--oro)}
+.card h2{font-size:1.4rem;color:var(--pino);margin-bottom:10px}
+.card ul{list-style:none;margin:0 0 12px;padding:0}
+.card li{padding:7px 0;border-bottom:1px dashed var(--linea)}
+.card li a{color:var(--grosella);font-size:.9rem;word-break:break-all}
+.badge{display:inline-block;margin-left:6px;padding:0 8px;border-radius:99px;font-size:.75rem;font-weight:700;background:#e7efe9;color:var(--pino);vertical-align:1px}
+.badge.alta{background:var(--grosella);color:#fff}
+dl{margin:0;font-size:.93rem}
+dt{font-weight:700;color:var(--pino);margin-top:8px}
+dd{margin:0;color:var(--tinta);white-space:pre-wrap}
+.vacia{color:var(--gris);font-style:italic}
+.edit{margin-top:14px;font-size:.9rem;padding:8px 14px}
+.estado{color:#fff;text-align:center;padding:40px 0}
+.estado.err{color:#ffd0d7}
+
+/* Formulario */
+dialog{border:0;border-radius:6px 6px 14px 14px;padding:0;width:min(680px,94vw);max-height:92vh;background:var(--papel);color:var(--tinta);border-top:6px solid var(--grosella)}
+dialog::backdrop{background:rgba(8,25,18,.7)}
+form{padding:24px 24px 22px}
+form h2{font-size:1.6rem;color:var(--pino)}
+fieldset{border:0;padding:0;margin:0 0 20px}
+legend{font:800 1.2rem "Bricolage Grotesque",serif;color:var(--pino);margin-bottom:4px;padding:0}
+.hint{margin:0 0 10px;color:var(--gris);font-size:.9rem}
+label{display:block;font-weight:500;font-size:.93rem;margin:10px 0 4px}
+input,textarea,select{width:100%;font:inherit;color:inherit;background:#fff;border:1.5px solid var(--linea);border-radius:8px;padding:9px 11px}
+textarea{min-height:76px;resize:vertical}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.item{display:grid;grid-template-columns:1fr 140px 38px;gap:8px;margin-bottom:10px;padding:10px;border:1.5px dashed var(--linea);border-radius:10px;background:#fff}
+.item .full{grid-column:1/3}
+.item label{margin:0 0 3px;font-size:.78rem;color:var(--gris)}
+.item .del{align-self:end;height:40px;border:0;background:transparent;color:var(--grosella);font-size:1.4rem;cursor:pointer;border-radius:8px}
+.acciones{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.acciones .btn{flex:1}
+.err{color:var(--grosella);font-weight:500;margin-top:10px;min-height:1.4em}
+@media(max-width:560px){.g2{grid-template-columns:1fr}.item{grid-template-columns:1fr 38px}.item .full,.item .prio{grid-column:1/2}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Listas de Navidad</h1>
+      <p>Mira qué le haría ilusión a cada uno. Escribe tu lista y la verán todos.</p>
+    </div>
+    <button class="btn" id="abrir">Escribir mi lista</button>
+  </header>
+
+  <div id="estado" class="estado">Cargando listas…</div>
+  <main id="grid"></main>
+</div>
+
+<dialog id="dlg">
+  <form id="f" novalidate>
+    <h2>Mi lista de Navidad</h2>
+    <fieldset>
+      <legend>¿Quién eres?</legend>
+      <p class="hint">Escribe tu email para confirmar que eres tú. No se muestra a nadie.</p>
+      <div class="g2">
+        <div><label for="quien">Tu nombre</label><select id="quien"></select></div>
+        <div><label for="email">Tu email</label><input id="email" type="email" autocomplete="email" placeholder="tucorreo@gmail.com"></div>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Lo que me haría ilusión</legend>
+      <div id="items"></div>
+      <button type="button" class="btn sec" id="add" style="width:100%">+ Añadir otro regalo</button>
+    </fieldset>
+    <fieldset>
+      <legend>Para acertar sin dudas</legend>
+      <div class="g2">
+        <div><label for="gustos">Mis gustos y aficiones</label><textarea id="gustos"></textarea></div>
+        <div><label for="no">Mejor que no me regales</label><textarea id="no"></textarea></div>
+        <div><label for="tallas">Tallas</label><input id="tallas" placeholder="Camiseta M, calzado 41…"></div>
+        <div><label for="colores">Colores y marcas favoritas</label><input id="colores"></div>
+      </div>
+      <label for="alergias">Alergias o cosas a evitar</label><input id="alergias">
+    </fieldset>
+    <div class="acciones">
+      <button type="button" class="btn sec" id="cancelar">Cancelar</button>
+      <button type="submit" class="btn" id="guardar">Guardar mi lista</button>
+    </div>
+    <div class="err" id="err" role="alert"></div>
+  </form>
+</dialog>
+
+<script>
+/* ===== PEGA AQUÍ la URL de tu aplicación web de Apps Script ===== */
+const API = "https://script.google.com/macros/s/AKfycbzQoIiLvKkUKo3PTnWt1oc-Dhl6fxoDtoetBamYzZXB6VmUnbb8W33JHqgfi9JjaoNf/exec";
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const urlOk = u => /^https?:\/\//i.test(u);
+let DATA = [];
+
+function parseRegalos(t){
+  return String(t || "").split("\n").map(l => l.trim()).filter(Boolean).map(l => {
+    const m = l.match(/^•?\s*(.*?)\s*(?:\((Muchísimas|Bastantes|Un capricho)\))?\s*(?:—\s*(\S+))?$/);
+    return { nom: m[1], pri: m[2] || "Bastantes", url: m[3] || "" };
+  });
+}
+function textoRegalos(){
+  return [...$("items").children].map(el => {
+    const nom = el.querySelector(".r-nom").value.trim();
+    if(!nom) return "";
+    const url = el.querySelector(".r-url").value.trim();
+    return `• ${nom} (${el.querySelector(".r-pri").value})` + (url ? ` — ${url}` : "");
+  }).filter(Boolean).join("\n");
+}
+
+async function cargar(){
+  const est = $("estado");
+  if(API.startsWith("PEGA_")){ est.className = "estado err"; est.textContent = "Falta pegar la URL de Apps Script en la constante API."; return; }
+  try{
+    const j = await (await fetch(API)).json();
+    DATA = j.data || [];
+    est.style.display = "none";
+    pintar(); rellenarNombres();
+  }catch(e){
+    est.className = "estado err"; est.style.display = "block";
+    est.textContent = "No se han podido cargar las listas. Revisa la URL y que el acceso sea «Cualquier usuario».";
+  }
+}
+
+function pintar(){
+  $("grid").innerHTML = DATA.map((p, i) => {
+    const regalos = parseRegalos(p.regalos);
+    const extras = [["Gustos", p.gustos], ["No regalar", p.no], ["Tallas", p.tallas], ["Colores y marcas", p.colores], ["Alergias", p.alergias]].filter(x => x[1]);
+    const vacia = !regalos.length && !extras.length;
+    return `<article class="card"><h2>${esc(p.nombre)}</h2>` +
+      (vacia ? `<p class="vacia">Todavía no ha escrito su lista.</p>` : "") +
+      (regalos.length ? `<ul>${regalos.map(r => `<li>${esc(r.nom)}<span class="badge ${r.pri === "Muchísimas" ? "alta" : ""}">${esc(r.pri)}</span>` +
+        (urlOk(r.url) ? `<br><a href="${esc(r.url)}" target="_blank" rel="noopener noreferrer">Ver enlace</a>` : "") + `</li>`).join("")}</ul>` : "") +
+      (extras.length ? `<dl>${extras.map(x => `<dt>${x[0]}</dt><dd>${esc(x[1])}</dd>`).join("")}</dl>` : "") +
+      `<button class="btn sec edit" data-i="${i}">Esta soy yo, editar</button></article>`;
+  }).join("");
+  document.querySelectorAll(".edit").forEach(b => b.onclick = () => abrir(DATA[b.dataset.i].nombre));
+}
+
+function rellenarNombres(){ $("quien").innerHTML = DATA.map(p => `<option>${esc(p.nombre)}</option>`).join(""); }
+
+function addItem(v = {}){
+  const n = $("items").children.length + Math.random().toString(36).slice(2, 6);
+  const d = document.createElement("div");
+  d.className = "item";
+  d.innerHTML = `<div><label for="r${n}">Regalo</label><input id="r${n}" class="r-nom" placeholder="Ej: auriculares inalámbricos"></div>
+    <div class="prio"><label for="p${n}">Ganas</label><select id="p${n}" class="r-pri"><option>Muchísimas</option><option>Bastantes</option><option>Un capricho</option></select></div>
+    <button type="button" class="del" aria-label="Quitar regalo">×</button>
+    <div class="full"><label for="l${n}">Enlace (opcional)</label><input id="l${n}" class="r-url" placeholder="https://…"></div>`;
+  d.querySelector(".r-nom").value = v.nom || "";
+  d.querySelector(".r-pri").value = v.pri || "Bastantes";
+  d.querySelector(".r-url").value = v.url || "";
+  d.querySelector(".del").onclick = () => d.remove();
+  $("items").appendChild(d);
+}
+
+function cargarPersona(){
+  const p = DATA.find(x => x.nombre === $("quien").value) || {};
+  $("items").innerHTML = "";
+  const rs = parseRegalos(p.regalos);
+  (rs.length ? rs : [{}, {}]).forEach(addItem);
+  $("gustos").value = p.gustos || ""; $("no").value = p.no || ""; $("tallas").value = p.tallas || "";
+  $("colores").value = p.colores || ""; $("alergias").value = p.alergias || "";
+}
+
+function abrir(nombre){
+  if(!DATA.length) return;
+  if(nombre) $("quien").value = nombre;
+  cargarPersona(); $("err").textContent = ""; $("dlg").showModal();
+}
+$("abrir").onclick = () => abrir();
+$("quien").onchange = cargarPersona;
+$("add").onclick = () => addItem();
+$("cancelar").onclick = () => $("dlg").close();
+
+$("f").addEventListener("submit", async e => {
+  e.preventDefault();
+  const err = $("err"); err.textContent = "";
+  if(!$("email").value.trim()){ err.textContent = "Escribe tu email para confirmar que eres tú."; $("email").focus(); return; }
+  $("guardar").disabled = true; $("guardar").textContent = "Guardando…";
+  try{
+    const r = await fetch(API, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({
+      nombre: $("quien").value, email: $("email").value, regalos: textoRegalos(), gustos: $("gustos").value.trim(),
+      no: $("no").value.trim(), tallas: $("tallas").value.trim(), colores: $("colores").value.trim(), alergias: $("alergias").value.trim() }) });
+    const j = await r.json();
+    if(!j.ok){ err.textContent = j.error; }
+    else { $("dlg").close(); await cargar(); }
+  }catch(x){ err.textContent = "No se ha podido guardar. Inténtalo de nuevo."; }
+  $("guardar").disabled = false; $("guardar").textContent = "Guardar mi lista";
+});
+
+cargar();
+</script>
+</body>
+</html>
